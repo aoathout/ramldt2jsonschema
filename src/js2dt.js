@@ -73,8 +73,8 @@ class RamlConverter {
   parseType (type, required = undefined, prop = undefined) {
     const outType = {}
 
-    if (required) {
-      outType.required = required
+    if (required || (type.required && !Array.isArray(type.required))) {
+      outType.required = required || type.required
     }
 
     if (typeof type === 'string') {
@@ -107,6 +107,10 @@ class RamlConverter {
 
     if (type.const) {
       outType.enum = [ type.const ]
+    }
+
+    if (type.enum) {
+      outType.enum = type.enum
     }
 
     switch (outType.type) {
@@ -181,7 +185,8 @@ class RamlConverter {
    */
   parseProps (props = {}, reqs = [], dropRequire = false) {
     return Object.keys(props).reduce((acc, pn) => {
-      const type = this.parseType(props[pn], reqs.includes(pn), pn)
+      const isRequired = Array.isArray(reqs) ? reqs.includes(pn) : !!props[pn].required
+      const type = this.parseType(props[pn], isRequired, pn)
 
       if (!dropRequire && !type.required) {
         pn += '?'
